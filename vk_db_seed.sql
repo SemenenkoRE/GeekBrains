@@ -27,17 +27,6 @@ CREATE TABLE messages (
     FOREIGN KEY (to_user_id) REFERENCES users(id)
 );
 
--- Добавил записей, чтобы было больше информации для анализа
-
-insert into messages values
-	('101', '1', '3', 'ghdj hfhj', now()),
-    ('102', '2', '1', 'gdcjk fdlkvj dioffk', now()),
-    ('103', '1', '10', 'xczd dsczdfv', now()),
-    ('104', '1', '3', 'sdcs 9889 098 sd', now()),
-    ('105', '3', '1', 'scd hello sdkj', now()),
-    ('106', '3', '1', 'scd zdcs lo sdkj', now());
-
-
 
 DROP TABLE IF EXISTS friend_requests;
 CREATE TABLE friend_requests (
@@ -54,7 +43,6 @@ CREATE TABLE friend_requests (
     FOREIGN KEY (initiator_user_id) REFERENCES users(id),
     FOREIGN KEY (target_user_id) REFERENCES users(id)
 );
-
 
 
 
@@ -120,7 +108,21 @@ CREATE TABLE likes(
     , FOREIGN KEY (media_id) REFERENCES media(id)
 );
 
-select * from likes;
+
+
+
+DROP TABLE IF EXISTS `profiles`;
+CREATE TABLE `profiles` (
+	user_id SERIAL PRIMARY KEY,
+    gender CHAR(1),
+    birthday DATE,
+	photo_id BIGINT UNSIGNED NULL,
+    created_at DATETIME DEFAULT NOW(),
+    hometown VARCHAR(100),
+    FOREIGN KEY (user_id) REFERENCES users(id) ON UPDATE CASCADE ON DELETE restrict,
+    FOREIGN KEY (photo_id) REFERENCES media(id)
+);
+
 
 INSERT INTO `likes` VALUES 
 ('16','78','1', now()),
@@ -143,17 +145,14 @@ INSERT INTO `likes` VALUES
 ;
 
 
-DROP TABLE IF EXISTS `profiles`;
-CREATE TABLE `profiles` (
-	user_id SERIAL PRIMARY KEY,
-    gender CHAR(1),
-    birthday DATE,
-	photo_id BIGINT UNSIGNED NULL,
-    created_at DATETIME DEFAULT NOW(),
-    hometown VARCHAR(100),
-    FOREIGN KEY (user_id) REFERENCES users(id) ON UPDATE CASCADE ON DELETE restrict,
-    FOREIGN KEY (photo_id) REFERENCES media(id)
-);
+insert into messages values
+	('101', '1', '3', 'ghdj hfhj', now()),
+    ('102', '2', '1', 'gdcjk fdlkvj dioffk', now()),
+    ('103', '1', '10', 'xczd dsczdfv', now()),
+    ('104', '1', '3', 'sdcs 9889 098 sd', now()),
+    ('105', '3', '1', 'scd hello sdkj', now()),
+    ('106', '3', '1', 'scd zdcs lo sdkj', now());
+
 
 
 -- Поиск наиболее активного переписчика с user ID #1 (наиболее активным считается тот, кто чаще ему писал).
@@ -168,25 +167,23 @@ FROM messages WHERE  to_user_id =1 GROUP BY  from_user_id ORDER BY COUNT(id) DES
 
 -- Выведено на экран 10 самых молодых User и количество их лайков;
 
-select
+SELECT
 	user_id,
 	COUNT(user_id) AS 'Количество лайков',
-	(select birthday from `profiles` where user_id = likes.user_id) AS 'Дата рождения'
-from likes GROUP BY user_id ORDER BY 'Дата рождения' DESC LIMIT 10;
+	(SELECT birthday FROM `profiles` WHERE user_id = likes.user_id) AS 'Дата рождения'
+FROM likes GROUP BY user_id ORDER BY 'Дата рождения' DESC LIMIT 10;
 
 
 -- Пол тех юзеров, которые делали лайки;
 -- Не смог указать кого больше
 
 
-(select
+(SELECT
 	gender,
 	count(gender)
-    -- gender
-from `profiles` where gender = 'f' and user_id IN (select user_id from likes))
-union
-(select
+FROM `profiles` WHERE gender = 'f' AND user_id IN (SELECT user_id FROM likes))
+UNION
+(SELECT
 	gender,
 	count(gender)
-    -- gender
-from `profiles` where gender = 'm' and user_id IN (select user_id from likes))
+FROM `profiles` WHERE gender = 'm' AND user_id IN (SELECT user_id FROM likes))
